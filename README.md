@@ -5,25 +5,13 @@ I am planning on making an Algorithm Visualizer with the goal of understanding a
 
 We want to visualize multiple algorithm categories:
 
-Sorting Algorithms:
+Sorting Algorithms (Merge Sort, Quick Sort, Heap Sort)
 
-Merge Sort
-Quick Sort
-Heap Sort
+Graph Algorithms (Dijkstra, Bellman-Ford, Kruskal, Prim)
 
-Graph Algorithms:
+Dynamic Programming (Visualizing DP tables for problems like Knapsack, LCS, etc.)
 
-Dijkstra
-Bellman-Ford
-Kruskal
-Prim
-
-Dynamic Programming: Visualizing DP tables for problems like Knapsack, LCS, etc.
-
-Data Structures:
-
-Segment Trees
-Fenwick Trees (BIT)
+Data Structures (Segment Trees, Fenwick Trees (BIT))
 
 # Visualization Framework: 
 
