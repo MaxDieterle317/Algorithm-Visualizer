@@ -24,8 +24,6 @@ Animation loop: Run a loop that calls step() and updates the screen.
 Highlight operations: E.g., swapping in sorting, edge selection in graphs, DP cell updates.
 User interaction: Buttons for "Next Step", "Run Automatically", "Reset", etc.
 
-# Next Step:
+# MVP:
 
-For example, Let's start by visualizing Merge Sort to build the base framework:
-Representing the array as vertical bars, highlighting the bars being compared/merged, and
-updating positions step by step. If we get this working smoothly, we can reuse the framework for Quick Sort, Heap Sort, and the others.
+Visualizer classes for each of the sorting algorithms, that can then be seen into pygame with functionality such as pause/play and fastwordward/reverse 
