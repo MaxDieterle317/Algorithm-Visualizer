@@ -135,30 +135,30 @@ class MergeSortVisualizer:
         max_val = max(self.array) if self.array else 1
 
         for i, val in enumerate(self.array):
-            # x coordinates for the bar
+            #x coordinates for the bar
             x0 = self.padding + i * self.bar_width
             x1 = x0 + self.bar_width - 5  # small gap between bars
 
-            # scale height to canvas space
+            # cale height to canvas space
             usable_height = self.canvas_height - 2 * self.padding
             h = int((val / max_val) * usable_height)
 
-            # y coordinates (top to bottom)
+            #y coordinates (top to bottom)
             y1 = self.canvas_height - self.padding
             y0 = y1 - h
 
-            # default bar color
+            #default bar color
             color = "skyblue"
 
-            # highlight compares in red
+            # ighlight compares in red
             if self.highlight_compare and i in self.highlight_compare:
                 color = "red"
 
-            # highlight overwrites in green
+            #highlight overwrites in green
             if self.highlight_overwrite == i:
                 color = "green"
 
-            # draw bar + value label
+            #draw bar + value label
             self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline="")
             self.canvas.create_text((x0 + x1) / 2, y0 - 10, text=str(val), font=("Arial", 9))
 
