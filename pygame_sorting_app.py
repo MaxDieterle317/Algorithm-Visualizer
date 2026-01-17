@@ -22,6 +22,7 @@ class PygameSortingApp:
         self.viz = visualizer
         self.width = width
         self.height = height
+        self.acc = 0.0
 
         pygame.init()
         self.screen = pygame.display.set_mode((width, height))
@@ -53,6 +54,7 @@ class PygameSortingApp:
         compare = hl.get("compare")
         swap = hl.get("swap")
         overwrite = hl.get("overwrite")
+        sorted_set = hl.get("sorted", set())
 
         for i, v in enumerate(arr):
             h = int((v / max_val) * usable_h)
@@ -61,13 +63,17 @@ class PygameSortingApp:
 
             color = (120, 170, 255)  # default
 
-            # priority: overwrite > swap > compare
+            # persistent sorted baseline
+            if i in sorted_set:
+                color = (160, 160, 255)
+
+            # transient overrides (your existing priority)
             if compare and i in compare:
-                color = (255, 80, 80)      # red
+                color = (255, 80, 80)
             if swap and i in swap:
-                color = (255, 200, 80)     # yellow
+                color = (255, 200, 80)
             if overwrite == i:
-                color = (80, 255, 120)     # green
+                color = (80, 255, 120)
 
             pygame.draw.rect(self.screen, color, (x, y, bar_w - 1, h))
 
@@ -79,6 +85,11 @@ class PygameSortingApp:
         )
         surf = self.font.render(text, True, (230, 230, 230))
         self.screen.blit(surf, (20, 10))
+        
+        s = self.viz.stats
+        stats_line = f"cmp={s['comparisons']} swp={s['swaps']} ovr={s['overwrites']}"
+        surf2 = self.font.render(stats_line, True, (230, 230, 230))
+        self.screen.blit(surf2, (20, 32))
 
         pygame.display.flip()
 
@@ -99,6 +110,7 @@ class PygameSortingApp:
 
         elif key == pygame.K_r:
             self.viz.reset()
+            self.acc = 0.0
 
         elif key == pygame.K_ESCAPE:
             raise SystemExit
@@ -106,15 +118,17 @@ class PygameSortingApp:
         elif key == pygame.K_1:
             from merge_sort_visualizer import MergeSortVisualizer
             self.viz = MergeSortVisualizer(self.viz.original, checkpoint_every=self.viz.checkpoint_every)
+            self.acc = 0.0
 
         elif key == pygame.K_2:
             from quick_sort_visualizer import QuickSortVisualizer
             self.viz = QuickSortVisualizer(self.viz.original, checkpoint_every=self.viz.checkpoint_every)
+            self.acc = 0.0
 
         elif key == pygame.K_3:
             from heap_sort_visualizer import HeapSortVisualizer
             self.viz = HeapSortVisualizer(self.viz.original, checkpoint_every=self.viz.checkpoint_every)
-
+            self.acc = 0.0
 
     # --------------------------
     # Main loop
@@ -122,10 +136,12 @@ class PygameSortingApp:
 
     def run(self, fps=60):
         running = True
-        while running:
-            self.clock.tick(fps)
+        self.acc = 0.0  # seconds accumulator
 
-            # Handle discrete events (keypresses, quit)
+        while running:
+            dt = self.clock.tick(fps) / 1000.0
+
+            # Handle discrete events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -135,28 +151,36 @@ class PygameSortingApp:
                     except SystemExit:
                         running = False
 
-            # Handle continuous hold-to-scrub behavior
             keys = pygame.key.get_pressed()
 
-            scrubbing = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]
+            scrubbing_left = keys[pygame.K_LEFT]
+            scrubbing_right = keys[pygame.K_RIGHT]
+            scrubbing = scrubbing_left or scrubbing_right
+
             if scrubbing:
-                # Scrubbing pauses autoplay (video-style)
                 self.viz.is_playing = False
 
-                if keys[pygame.K_LEFT]:
-                    for _ in range(self.viz.speed):
-                        self.viz.step_backward()
+            # events per second -> seconds per event
+            speed = max(1, self.viz.speed)
+            spf = 1.0 / speed
 
-                if keys[pygame.K_RIGHT]:
-                    for _ in range(self.viz.speed):
-                        self.viz.step_forward()
-            else:
-                # Normal autoplay
-                self.viz.tick()
+            self.acc += dt
+
+            # perform as many steps as accumulator allows
+            while self.acc >= spf:
+                self.acc -= spf
+
+                if scrubbing_left:
+                    self.viz.step_backward()
+                elif scrubbing_right:
+                    self.viz.step_forward()
+                elif self.viz.is_playing:
+                    if not self.viz.step_forward():
+                        self.viz.is_playing = False
+                        break
+                else:
+                    break
 
             self.draw()
 
         pygame.quit()
-
-
-#NEXT: Add stats for each algorithm (comparisons, swaps, overwrites, controls)

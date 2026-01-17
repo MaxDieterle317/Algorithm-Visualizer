@@ -26,14 +26,15 @@ class QuickSortVisualizer(SortingVisualizerBase):
         i = low  # place for next "small" element
 
         for j in range(low, high):
-            # Compare current element with pivot (visual-only)
+            # Show boundary i and current j
+            yield {"type": "compare", "i": i, "j": j}
+
+            # Compare current element with pivot at high
             yield {"type": "compare", "i": j, "j": high}
 
             if arr_copy[j] <= pivot:
                 if i != j:
-                    # Swap in working copy
                     arr_copy[i], arr_copy[j] = arr_copy[j], arr_copy[i]
-                    # Emit swap event for renderer/base
                     yield {"type": "swap", "i": i, "j": j}
                 i += 1
 

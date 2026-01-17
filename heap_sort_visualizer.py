@@ -17,11 +17,12 @@ class HeapSortVisualizer(SortingVisualizerBase):
 
         # Extract max one by one
         for end in range(n - 1, 0, -1):
-            # Swap max (root) with the end element
             arr_copy[0], arr_copy[end] = arr_copy[end], arr_copy[0]
             yield {"type": "swap", "i": 0, "j": end}
 
-            # Restore heap property on the reduced heap
+            # Mark end as sorted (visual-only convention)
+            yield {"type": "compare", "i": end, "j": end}
+
             yield from self._heapify(arr_copy, end, 0)
 
     def _heapify(self, arr_copy, heap_size, root):

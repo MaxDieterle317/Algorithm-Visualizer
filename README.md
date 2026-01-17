@@ -1,5 +1,5 @@
 # Algorithm-Visualizer
-I am planning on making an Algorithm Visualizer with the goal of understanding algorithms deeply through visualizing them.
+I am making an Algorithm Visualizer with the goal of understanding algorithms deeply through visualizing them.
 
 # Scope & Structure:
 
@@ -24,6 +24,14 @@ Animation loop: Run a loop that calls step() and updates the screen.
 Highlight operations: E.g., swapping in sorting, edge selection in graphs, DP cell updates.
 User interaction: Buttons for "Next Step", "Run Automatically", "Reset", etc.
 
+# How to Run:
+
+0) Make sure you have Python (3.9+ recommended) annd pygame installed
+
 # MVP:
 
 Visualizer classes for each of the sorting algorithms, that can then be seen into pygame with functionality such as pause/play and fastwordward/reverse 
+
+# Next Step:
+
+Continue completion of the MVP, complete with testing, then move into implementing other algorithms
