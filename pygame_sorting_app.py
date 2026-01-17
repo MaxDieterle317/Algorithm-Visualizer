@@ -1,3 +1,6 @@
+import os
+print("IMPORTING pygame_sorting_app.py FROM:", os.path.abspath(__file__))
+
 import pygame
 
 
@@ -26,7 +29,7 @@ class PygameSortingApp:
 
         pygame.init()
         self.screen = pygame.display.set_mode((width, height))
-        pygame.display.set_caption("Algorithm Visualizer (Sorting MVP)")
+        pygame.display.set_caption("Algorithm Visualizer")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 24)
 
@@ -35,19 +38,94 @@ class PygameSortingApp:
     # --------------------------
 
     def draw(self):
-        self.screen.fill((20, 20, 20))
+        # ---- layout constants (define FIRST) ----
+        HUD_HEIGHT = 90
+        FOOTER_HEIGHT = 40
+        SIDEBAR_WIDTH = 260
+        padding = 40
+
+        # ---- background ----
+        self.screen.fill((18, 18, 18))
+
+        # HUD bar
+        pygame.draw.rect(self.screen, (28, 28, 28), (0, 0, self.width, HUD_HEIGHT))
+
+        # Sidebar panel (right)
+        pygame.draw.rect(
+            self.screen,
+            (22, 22, 22),
+            (
+                self.width - SIDEBAR_WIDTH,
+                HUD_HEIGHT,
+                SIDEBAR_WIDTH,
+                self.height - HUD_HEIGHT - FOOTER_HEIGHT,
+            ),
+        )
+
+        # Footer bar
+        pygame.draw.rect(
+            self.screen,
+            (24, 24, 24),
+            (0, self.height - FOOTER_HEIGHT, self.width, FOOTER_HEIGHT),
+        )
 
         arr = self.viz.array
         if not arr:
             pygame.display.flip()
             return
 
+        # ---- HUD text ----
+        algo_name = getattr(self.viz, "NAME", "Unknown Algorithm")
+        status = "PLAYING" if self.viz.is_playing else "PAUSED"
+        s = self.viz.stats
+
+        hud_lines = [
+            f"Algorithm: {algo_name}",
+            f"Status: {status}    Speed: {self.viz.speed} events/sec",
+            f"Progress: {self.viz.event_index} / {len(self.viz.events)} steps    "
+            f"cmp={s['comparisons']} swp={s['swaps']} ovr={s['overwrites']}",
+        ]
+
+        for idx, line in enumerate(hud_lines):
+            line_surf = self.font.render(line, True, (230, 230, 230))
+            self.screen.blit(line_surf, (20, 10 + idx * 24))
+
+        # ---- controls footer ----
+        controls = (
+            "SPACE: Play/Pause   ←/→: Scrub   ↑/↓: Speed   R: Reset   "
+            "1: Merge   2: Quick   3: Heap   ESC: Quit"
+        )
+        controls_surf = self.font.render(controls, True, (200, 200, 200))
+        self.screen.blit(controls_surf, (20, self.height - FOOTER_HEIGHT + 10))
+
+        # ---- legend (inside sidebar) ----
+        legend_x = self.width - SIDEBAR_WIDTH + 20
+        legend_y = HUD_HEIGHT + 20
+
+        title = self.font.render("Legend", True, (230, 230, 230))
+        self.screen.blit(title, (legend_x, legend_y - 24))
+
+        legend = [
+            ((255, 80, 80), "Comparison"),
+            ((255, 200, 80), "Swap"),
+            ((80, 255, 120), "Overwrite"),
+            ((160, 160, 255), "Sorted (final)"),
+        ]
+        for idx, (color, label) in enumerate(legend):
+            y = legend_y + idx * 26
+            pygame.draw.rect(self.screen, color, (legend_x, y, 18, 18))
+            label_surf = self.font.render(label, True, (220, 220, 220))
+            self.screen.blit(label_surf, (legend_x + 26, y - 2))
+
+        # ---- bar area (exclude sidebar) ----
         n = len(arr)
         max_val = max(arr) if max(arr) != 0 else 1
 
-        padding = 40
-        usable_w = self.width - 2 * padding
-        usable_h = self.height - 2 * padding
+        top = HUD_HEIGHT + 10
+        bottom = self.height - FOOTER_HEIGHT - padding
+        usable_h = max(1, bottom - top)
+
+        usable_w = self.width - SIDEBAR_WIDTH - 2 * padding
         bar_w = max(1, usable_w // n)
 
         hl = self.viz.highlight
@@ -59,15 +137,12 @@ class PygameSortingApp:
         for i, v in enumerate(arr):
             h = int((v / max_val) * usable_h)
             x = padding + i * bar_w
-            y = self.height - padding - h
+            y = bottom - h
 
             color = (120, 170, 255)  # default
-
-            # persistent sorted baseline
             if i in sorted_set:
                 color = (160, 160, 255)
 
-            # transient overrides (your existing priority)
             if compare and i in compare:
                 color = (255, 80, 80)
             if swap and i in swap:
@@ -75,21 +150,7 @@ class PygameSortingApp:
             if overwrite == i:
                 color = (80, 255, 120)
 
-            pygame.draw.rect(self.screen, color, (x, y, bar_w - 1, h))
-
-        status = "PLAYING" if self.viz.is_playing else "PAUSED"
-        text = (
-            f"{status} | speed={self.viz.speed} | "
-            f"event={self.viz.event_index}/{len(self.viz.events)} | "
-            f"HOLD LEFT=rewind RIGHT=forward"
-        )
-        surf = self.font.render(text, True, (230, 230, 230))
-        self.screen.blit(surf, (20, 10))
-        
-        s = self.viz.stats
-        stats_line = f"cmp={s['comparisons']} swp={s['swaps']} ovr={s['overwrites']}"
-        surf2 = self.font.render(stats_line, True, (230, 230, 230))
-        self.screen.blit(surf2, (20, 32))
+            pygame.draw.rect(self.screen, color, (x, y, bar_w - 2, h))
 
         pygame.display.flip()
 

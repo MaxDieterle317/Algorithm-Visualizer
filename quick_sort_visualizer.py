@@ -9,6 +9,7 @@ class QuickSortVisualizer(SortingVisualizerBase):
 
     Uses Lomuto partition (pivot = last element) for simplicity.
     """
+    NAME = "Quick Sort"
 
     def generate_events(self, arr_copy):
         yield from self._quick_sort(arr_copy, 0, len(arr_copy) - 1)

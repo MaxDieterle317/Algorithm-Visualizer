@@ -31,7 +31,7 @@ class SortingVisualizerBase(ABC):
         # ---- checkpoints ----
         self.checkpoint_every = checkpoint_every
         # (event_index, array_snapshot, stats_snapshot)
-        self.checkpoints = [(0, self.original.copy(), self.stats.copy())]
+        self.checkpoints = [(0, self.original.copy(), self.stats.copy(), set())]
 
         # ---- playback ----
         self.is_playing = False
@@ -66,6 +66,9 @@ class SortingVisualizerBase(ABC):
 
     def _apply_event(self, event):
         t = event["type"]
+        if "sorted" not in self.highlight:
+            self.highlight["sorted"] = set()
+
 
         # Clear transient highlights each event (keep persistent ones like sorted)
         self.highlight["compare"] = None
@@ -96,7 +99,9 @@ class SortingVisualizerBase(ABC):
 
     def _maybe_checkpoint(self):
         if self.event_index % self.checkpoint_every == 0:
-            self.checkpoints.append((self.event_index, self.array.copy(), self.stats.copy()))
+            self.checkpoints.append(
+                (self.event_index, self.array.copy(), self.stats.copy(), self.highlight["sorted"].copy())
+            )
 
     def step_forward(self):
         # If we rewound and then step forward, we should discard checkpoints beyond current index
@@ -132,13 +137,19 @@ class SortingVisualizerBase(ABC):
                 cp_idx = i
                 break
 
-        base_event_index, snapshot, stats_snapshot = self.checkpoints[cp_idx]
+        base_event_index, snapshot, stats_snapshot, sorted_snapshot = self.checkpoints[cp_idx]
         self.array = snapshot.copy()
         self.stats = stats_snapshot.copy()
         self.event_index = base_event_index
 
         # Clear highlights for a clean restore (optional)
-        self.highlight = {"compare": None, "swap": None, "overwrite": None}
+        self.highlight = {
+            "compare": None,
+            "swap": None,
+            "overwrite": None,
+            "sorted": sorted_snapshot.copy(),
+        }
+        self.highlight.setdefault("sorted", set())
 
         # Replay forward to target_index
         while self.event_index < target_index:
