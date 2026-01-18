@@ -7,6 +7,7 @@ class HeapSortVisualizer(SortingVisualizerBase):
       - compare events during heapify
       - swap events when swapping nodes or extracting max
     """
+    NAME = "Heap Sort"
 
     def generate_events(self, arr_copy):
         n = len(arr_copy)

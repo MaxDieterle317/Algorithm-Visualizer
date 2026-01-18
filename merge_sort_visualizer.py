@@ -1,3 +1,6 @@
+import os
+print("IMPORTING merge_sort_visualizer.py FROM:", os.path.abspath(__file__))
+
 from sorting_visualizer_base import SortingVisualizerBase
 
 
@@ -5,18 +8,17 @@ class MergeSortVisualizer(SortingVisualizerBase):
     """
     Merge Sort visualizer that yields events using the shared contract.
 
+    Contract event types ONLY:
+      - {"type": "compare", "i": int, "j": int}
+      - {"type": "overwrite", "k": int, "value": int}
+
     Uses a working copy (arr_copy) to maintain correct algorithm state.
     Base class applies the yielded events to self.array.
     """
+    NAME = "Merge Sort"
 
     def generate_events(self, arr_copy):
-        # Optional: focus whole array at start
-        yield {"type": "range", "kind": "focus", "start": 0, "end": len(arr_copy)}
         yield from self._merge_sort_steps(arr_copy, 0, len(arr_copy))
-        yield {"type": "clear", "kind": "focus"}
-
-        # Optional: mark all sorted at end
-        yield {"type": "mark", "kind": "sorted", "indices": list(range(len(arr_copy)))}
 
     def _merge_sort_steps(self, arr_copy, start, end):
         if end - start <= 1:
@@ -24,16 +26,9 @@ class MergeSortVisualizer(SortingVisualizerBase):
 
         mid = (start + end) // 2
 
-        # Focus current recursion segment (visual-only)
-        yield {"type": "range", "kind": "focus", "start": start, "end": end}
-
         yield from self._merge_sort_steps(arr_copy, start, mid)
         yield from self._merge_sort_steps(arr_copy, mid, end)
-
         yield from self._merge_steps(arr_copy, start, mid, end)
-
-        # Clear merge highlight when done
-        yield {"type": "clear", "kind": "merge"}
 
     def _merge_steps(self, arr_copy, start, mid, end):
         left = arr_copy[start:mid]
@@ -42,17 +37,9 @@ class MergeSortVisualizer(SortingVisualizerBase):
         i = j = 0
         k = start
 
-        # Mark the merge region (visual-only)
-        yield {"type": "range", "kind": "merge", "start": start, "mid": mid, "end": end}
-
         while i < len(left) and j < len(right):
-            # Compare two logical sources, and show destination k
-            yield {
-                "type": "compare",
-                "a": start + i,   # logical left pointer
-                "b": mid + j,     # logical right pointer
-                "dst": k          # where the overwrite will happen
-            }
+            # Visual-only compare between the two sources
+            yield {"type": "compare", "i": start + i, "j": mid + j}
 
             if left[i] <= right[j]:
                 arr_copy[k] = left[i]
@@ -65,16 +52,16 @@ class MergeSortVisualizer(SortingVisualizerBase):
 
             k += 1
 
+        # Drain leftovers (still overwrite events; compare can highlight source)
         while i < len(left):
-            # Optional: still show dst
-            yield {"type": "compare", "a": start + i, "b": start + i, "dst": k}
+            yield {"type": "compare", "i": start + i, "j": start + i}
             arr_copy[k] = left[i]
             yield {"type": "overwrite", "k": k, "value": left[i]}
             i += 1
             k += 1
 
         while j < len(right):
-            yield {"type": "compare", "a": mid + j, "b": mid + j, "dst": k}
+            yield {"type": "compare", "i": mid + j, "j": mid + j}
             arr_copy[k] = right[j]
             yield {"type": "overwrite", "k": k, "value": right[j]}
             j += 1

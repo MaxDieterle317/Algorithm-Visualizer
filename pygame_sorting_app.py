@@ -3,6 +3,21 @@ print("IMPORTING pygame_sorting_app.py FROM:", os.path.abspath(__file__))
 
 import pygame
 
+COLORS = {
+    "bg": (18, 18, 18),
+    "hud": (28, 28, 28),
+    "footer": (24, 24, 24),
+    "sidebar": (22, 22, 22),
+
+    "default": (120, 170, 255),
+    "compare": (255, 80, 80),
+    "swap": (255, 200, 80),
+    "overwrite": (80, 255, 120),
+    "sorted": (160, 160, 255),
+    "text": (230, 230, 230),
+    "text_dim": (200, 200, 200),
+}
+
 
 class PygameSortingApp:
     """
@@ -83,7 +98,7 @@ class PygameSortingApp:
             f"Algorithm: {algo_name}",
             f"Status: {status}    Speed: {self.viz.speed} events/sec",
             f"Progress: {self.viz.event_index} / {len(self.viz.events)} steps    "
-            f"cmp={s['comparisons']} swp={s['swaps']} ovr={s['overwrites']}",
+            f"Comparisons = {s['comparisons']} Swaps = {s['swaps']} Overwrites = {s['overwrites']}",
         ]
 
         for idx, line in enumerate(hud_lines):
@@ -92,7 +107,7 @@ class PygameSortingApp:
 
         # ---- controls footer ----
         controls = (
-            "SPACE: Play/Pause   ←/→: Scrub   ↑/↓: Speed   R: Reset   "
+            "SPACE: Play/Pause   <-/->: Back/Fastforward   ^/v: Speedup/Slowdown   R: Reset   "
             "1: Merge   2: Quick   3: Heap   ESC: Quit"
         )
         controls_surf = self.font.render(controls, True, (200, 200, 200))
@@ -176,17 +191,17 @@ class PygameSortingApp:
         elif key == pygame.K_ESCAPE:
             raise SystemExit
 
-        elif key == pygame.K_1:
+        elif key in (pygame.K_1, pygame.K_KP1):
             from merge_sort_visualizer import MergeSortVisualizer
             self.viz = MergeSortVisualizer(self.viz.original, checkpoint_every=self.viz.checkpoint_every)
             self.acc = 0.0
 
-        elif key == pygame.K_2:
+        elif key in (pygame.K_2, pygame.K_KP2):
             from quick_sort_visualizer import QuickSortVisualizer
             self.viz = QuickSortVisualizer(self.viz.original, checkpoint_every=self.viz.checkpoint_every)
             self.acc = 0.0
 
-        elif key == pygame.K_3:
+        elif key in (pygame.K_3, pygame.K_KP3):
             from heap_sort_visualizer import HeapSortVisualizer
             self.viz = HeapSortVisualizer(self.viz.original, checkpoint_every=self.viz.checkpoint_every)
             self.acc = 0.0
@@ -212,22 +227,16 @@ class PygameSortingApp:
                     except SystemExit:
                         running = False
 
+            # Continuous key state (for hold-to-scrub)
             keys = pygame.key.get_pressed()
-
             scrubbing_left = keys[pygame.K_LEFT]
             scrubbing_right = keys[pygame.K_RIGHT]
-            scrubbing = scrubbing_left or scrubbing_right
-
-            if scrubbing:
-                self.viz.is_playing = False
 
             # events per second -> seconds per event
             speed = max(1, self.viz.speed)
             spf = 1.0 / speed
-
             self.acc += dt
 
-            # perform as many steps as accumulator allows
             while self.acc >= spf:
                 self.acc -= spf
 
@@ -242,6 +251,7 @@ class PygameSortingApp:
                 else:
                     break
 
+            # Draw once per frame
             self.draw()
 
         pygame.quit()

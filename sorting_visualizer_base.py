@@ -112,6 +112,7 @@ class SortingVisualizerBase(ABC):
         # Replay existing event
         if self.event_index < len(self.events):
             event = self.events[self.event_index]
+            print("EVENT:", event)
             self._apply_event(event)
             self.event_index += 1
             self._maybe_checkpoint()
@@ -121,6 +122,11 @@ class SortingVisualizerBase(ABC):
         try:
             event = next(self._gen)
         except StopIteration:
+            # Final cleanup: show everything as sorted, clear transient highlights
+            self.highlight["compare"] = None
+            self.highlight["swap"] = None
+            self.highlight["overwrite"] = None
+            self.highlight["sorted"] = set(range(len(self.array)))
             return False
 
         self.events.append(event)
